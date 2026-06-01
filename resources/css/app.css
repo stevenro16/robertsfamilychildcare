@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    --color-primary:     #3D7222;
+    --color-primary-50:  #F0F8EB;
+    --color-primary-100: #D6EDBC;
+    --color-primary-200: #ADDA89;
+    --color-primary-400: #6DB845;
+    --color-primary-500: #50962E;
+    --color-primary-600: #3D7222;
+    --color-primary-700: #2C521A;
+
+    --color-accent:       #C27A2A;
+    --color-accent-light: #FDF4E7;
+    --color-accent-dark:  #9E6120;
+
+    --color-surface: #FEFCF5;
+
+    --animate-fade-in:  fadeIn 0.5s ease-in-out;
+    --animate-slide-up: slideUp 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+    0%   { transform: translateY(16px); opacity: 0; }
+    100% { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes checkin-reject {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-12px); }
+    40%  { transform: translateX(12px); }
+    60%  { transform: translateX(-8px); }
+    80%  { transform: translateX(8px); }
+    100% { transform: translateX(0); }
+}
+
+@layer base {
+    html { scroll-behavior: smooth; }
+    body { @apply text-slate-800 antialiased; }
+    h1, h2, h3, h4 { @apply font-semibold tracking-tight; }
+}
+
+@layer components {
+    .animate-checkin-reject {
+        animation: checkin-reject 0.45s cubic-bezier(.36,.07,.19,.97);
+    }
+
+    .wide {
+        @apply w-full px-6 sm:px-10 lg:px-16 xl:px-24 2xl:px-32;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary-500 text-white font-medium text-sm transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-accent {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-medium text-sm transition-colors hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-primary-500 text-primary-600 font-medium text-sm transition-colors hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-slate-600 font-medium text-sm transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300;
+    }
+
+    .input {
+        @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100 transition-colors;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-slate-700 mb-1.5;
+    }
+
+    .card {
+        @apply bg-white rounded-xl border border-slate-100 shadow-sm;
+    }
+
+    .section-heading {
+        @apply text-3xl font-bold text-slate-800 mb-3;
+    }
+
+    .section-sub {
+        @apply text-slate-500 text-lg max-w-2xl mx-auto;
+    }
+}
