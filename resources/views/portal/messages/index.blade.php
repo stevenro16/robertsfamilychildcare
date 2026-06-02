@@ -2,8 +2,12 @@
 @section('title', 'Messages')
 
 @section('portal-content')
-<div class="max-w-3xl">
-    <h1 class="text-2xl font-bold text-slate-800 mb-6">Messages</h1>
+<div class="w-full">
+    <h1 class="text-2xl font-bold text-slate-800 mb-2 flex items-center gap-2.5">
+        <x-icon name="message-circle" class="w-6 h-6 text-primary-500" />
+        Messages
+    </h1>
+    <div class="h-0.5 bg-linear-to-r from-primary-400 to-transparent rounded-full mb-6"></div>
 
     @if($conversations->isEmpty())
         <div class="card p-12 text-center text-slate-400">

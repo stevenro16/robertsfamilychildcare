@@ -20,6 +20,7 @@ class GalleryImage extends Model
     {
         return [
             'sortOrder' => 'integer',
+            'takenAt'   => 'date',
             'createdAt' => 'datetime',
         ];
     }

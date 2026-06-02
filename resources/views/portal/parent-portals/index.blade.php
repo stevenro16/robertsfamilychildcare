@@ -2,13 +2,17 @@
 @section('title', 'Parent Portals')
 
 @section('portal-content')
-<div class="max-w-4xl" x-data="{ createOpen: false, resetId: null, resetOpen: false }">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-slate-800">Parent Portals</h1>
+<div class="w-full" x-data="{ createOpen: false, resetId: null, resetOpen: false }">
+    <div class="flex items-center justify-between mb-2">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2.5">
+            <x-icon name="users" class="w-6 h-6 text-primary-500" />
+            Parent Portals
+        </h1>
         <button @click="createOpen = true" class="btn-primary gap-1.5">
             <x-icon name="plus" class="w-4 h-4" /> New Account
         </button>
     </div>
+    <div class="h-0.5 bg-linear-to-r from-primary-400 to-transparent rounded-full mb-6"></div>
 
     @if(session('success'))
         <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">

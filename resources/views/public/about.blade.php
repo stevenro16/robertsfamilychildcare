@@ -3,7 +3,7 @@
 
 @section('content')
 <section class="bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-    <div class="wide py-24 lg:py-32">
+    <div class="wide py-8 lg:py-10">
         <p class="text-primary-200 text-sm font-medium uppercase tracking-widest mb-4">Who We Are</p>
         <h1 class="text-5xl lg:text-6xl font-bold mb-5">About Roberts Family ChildCare</h1>
         <p class="text-primary-100 text-xl max-w-xl">A licensed home daycare built on love, safety, and a passion for children's growth.</p>

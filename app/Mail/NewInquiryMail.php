@@ -17,7 +17,7 @@ class NewInquiryMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'New Inquiry — ' . $this->inquiry->name);
+        return new Envelope(subject: 'New Inquiry — ' . $this->inquiry->parentName);
     }
 
     public function content(): Content

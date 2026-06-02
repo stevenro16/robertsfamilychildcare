@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
 use App\Models\TestimonialLink;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class TestimonialController extends Controller
@@ -29,7 +30,9 @@ class TestimonialController extends Controller
 
     public function links()
     {
-        $links = TestimonialLink::orderBy('createdAt', 'desc')->get();
+        $links = TestimonialLink::with(['createdBy', 'testimonial'])
+            ->orderBy('createdAt', 'desc')
+            ->get();
         return view('portal.testimonials.links', compact('links'));
     }
 
@@ -37,13 +40,12 @@ class TestimonialController extends Controller
     {
         $data = $request->validate([
             'parentName' => 'required|string|max:255',
-            'email'      => 'required|email|max:255',
         ]);
 
         TestimonialLink::create([
-            'token'      => Str::random(32),
-            'parentName' => $data['parentName'],
-            'email'      => $data['email'],
+            'token'       => Str::random(32),
+            'parentName'  => $data['parentName'],
+            'createdById' => Auth::id(),
         ]);
 
         return back()->with('success', 'Link created.');

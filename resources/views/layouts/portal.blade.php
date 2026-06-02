@@ -10,8 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-50 min-h-screen">
-<div class="flex min-h-screen" x-data="portalShell()" x-init="init()">
+<body class="bg-[#C0C0C0] min-h-screen">
+<div class="portal-shell flex min-h-screen" x-data="portalShell()" x-init="init()">
 
     {{-- Sidebar --}}
     <aside
@@ -19,9 +19,9 @@
         class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col lg:translate-x-0 lg:static lg:inset-auto transition-transform duration-200"
     >
         {{-- Logo --}}
-        <div class="px-4 py-5 border-b border-slate-100">
+        <div class="px-4 pt-4 pb-2 border-b border-slate-100">
             <a href="{{ route('home') }}">
-                <img src="{{ asset('logo.png') }}" alt="Roberts Family ChildCare" class="h-12 w-auto">
+                <img src="{{ asset('logo.png') }}" alt="Roberts Family ChildCare" class="h-48 w-auto">
             </a>
         </div>
 
@@ -33,7 +33,6 @@
                     ['route' => 'portal.dashboard',       'label' => 'Dashboard',       'icon' => 'home'],
                     ['route' => 'portal.inquiries.index', 'label' => 'Inquiries',        'icon' => 'message-circle'],
                     ['route' => 'portal.children.index',  'label' => 'Children',         'icon' => 'users'],
-                    ['route' => 'portal.contacts.index',  'label' => 'Families',         'icon' => 'heart'],
                     ['route' => 'portal.staff.index',     'label' => 'Staff',            'icon' => 'star'],
                     ['route' => 'portal.gallery.index',   'label' => 'Gallery',          'icon' => 'image-plus'],
                     ['route' => 'portal.messages.index',  'label' => 'Messages',         'icon' => 'message-circle', 'badge' => $unread ?? 0],
@@ -48,7 +47,7 @@
             @foreach($nav as $item)
                 <a href="{{ route($item['route']) }}"
                    class="flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                          {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) ? 'bg-primary-50 text-primary-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800' }}">
+                          {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) ? 'bg-white text-primary-700 shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800' }}">
                     <span class="flex items-center gap-2.5">
                         <x-icon name="{{ $item['icon'] }}" class="w-4 h-4 shrink-0" />
                         {{ $item['label'] }}

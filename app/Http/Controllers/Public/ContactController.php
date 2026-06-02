@@ -29,12 +29,21 @@ class ContactController extends Controller
             'message'         => 'nullable|string|max:2000',
         ]);
 
-        $inquiry = Inquiry::create(array_merge($data, [
-            'status'    => 'NEW',
-            'isSnoozed' => false,
-            'createdAt' => now(),
-            'updatedAt' => now(),
-        ]));
+        $inquiry = Inquiry::create([
+            'parentName'      => $data['parentName'],
+            'parentEmail'     => $data['parentEmail'],
+            'parentPhone'     => $data['parentPhone'],
+            'childName'       => $data['childName'],
+            'childDob'        => $data['childDob'] ?? null,
+            'desiredStart'    => $data['desiredStart'] ?? null,
+            'hearAbout'       => $data['hearAbout'] ?? null,
+            'programInterest' => $data['programInterest'] ?? null,
+            'message'         => $data['message'] ?? null,
+            'status'          => 'NEW',
+            'isSnoozed'       => false,
+            'createdAt'       => now(),
+            'updatedAt'       => now(),
+        ]);
 
         $notificationEmail = env('NOTIFICATION_EMAIL');
         if ($notificationEmail) {

@@ -3,7 +3,7 @@
 
 @section('content')
 <section class="bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-    <div class="wide py-24 lg:py-32">
+    <div class="wide py-8 lg:py-10">
         <p class="text-primary-200 text-sm font-medium uppercase tracking-widest mb-4">Parent Reviews</p>
         <h1 class="text-5xl lg:text-6xl font-bold mb-5">What Parents Say</h1>
         <p class="text-primary-100 text-xl max-w-xl">Real stories from families in our care.</p>

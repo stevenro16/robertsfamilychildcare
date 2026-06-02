@@ -18,3 +18,4 @@ Route::get('/children/{id}/contacts',         [ChildController::class, 'contacts
 Route::post('/children/{id}/contacts',        [ChildController::class, 'addContact'])->name('children.contacts.add');
 Route::patch('/children/{id}/contacts/{ccId}',[ChildController::class, 'updateContact'])->name('children.contacts.update');
 Route::post('/children/{id}/photo',           [ChildController::class, 'uploadPhoto'])->name('children.photo');
+Route::delete('/children/{id}/photo',        [ChildController::class, 'clearPhoto'])->name('children.photo.clear');

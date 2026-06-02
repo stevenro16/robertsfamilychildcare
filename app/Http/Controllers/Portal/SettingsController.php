@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
-use App\Models\SiteContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,21 +12,7 @@ class SettingsController extends Controller
 {
     public function index()
     {
-        $keys = [
-            'hero_headline', 'hero_subheadline', 'about_body',
-            'programs_infant', 'programs_young_toddler', 'programs_toddler',
-            'programs_preschool', 'notification_email',
-        ];
-        $content = collect($keys)->mapWithKeys(fn ($k) => [$k => SiteContent::get($k)]);
-        return view('portal.settings.index', compact('content'));
-    }
-
-    public function update(Request $request)
-    {
-        foreach ($request->except('_token', '_method') as $key => $value) {
-            SiteContent::set($key, $value ?? '');
-        }
-        return back()->with('success', 'Settings saved.');
+        return view('portal.settings.index');
     }
 
     public function backup()

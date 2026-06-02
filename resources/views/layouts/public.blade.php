@@ -9,18 +9,28 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
 </head>
 <body class="bg-surface">
+
+@php
+    $loggedInStaff  = auth()->guard('web')->check();
+    $loggedInParent = auth()->guard('parent')->check();
+@endphp
 
 {{-- Top-level wrapper owns all Alpine state so the modal can live outside the header --}}
 <div x-data="{
     navOpen: false,
     scrolled: false,
     loginOpen: {{ session('login_error') ? 'true' : 'false' }},
+    loginError: {{ session('login_error') ? json_encode(session('login_error')) : 'null' }},
     username: $persist('').as('rfcc_remembered_username'),
     remember: $persist(false).as('rfcc_remember_username'),
     loading: false
-}" x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 10)">
+}" x-init="
+    @if(old('username')) username = {{ json_encode(old('username')) }}; @endif
+    window.addEventListener('scroll', () => scrolled = window.scrollY > 10)
+">
 
     {{-- Navbar --}}
     <header
@@ -53,13 +63,31 @@
                     @endforeach
                 </nav>
 
-                {{-- Login button (desktop) --}}
-                <div class="hidden lg:flex items-center">
-                    <button @click="loginOpen = true"
-                            class="text-sm font-medium text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1.5">
-                        <x-icon name="log-out" class="w-4 h-4 rotate-180" />
-                        Login
-                    </button>
+                {{-- CTA + Login (desktop) --}}
+                <div class="hidden lg:flex items-center gap-2">
+                    <a href="{{ route('contact') }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-accent text-accent hover:bg-accent hover:text-white text-sm font-medium transition-colors">
+                        Inquire
+                    </a>
+                    @if($loggedInStaff)
+                        <a href="{{ route('portal.dashboard') }}"
+                           class="text-sm font-medium text-primary-600 hover:text-primary-800 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5">
+                            <x-icon name="layout" class="w-4 h-4" />
+                            Admin Panel
+                        </a>
+                    @elseif($loggedInParent)
+                        <a href="{{ route('parent.dashboard') }}"
+                           class="text-sm font-medium text-primary-600 hover:text-primary-800 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5">
+                            <x-icon name="layout" class="w-4 h-4" />
+                            Parent Portal
+                        </a>
+                    @else
+                        <button @click="loginOpen = true"
+                                class="text-sm font-medium text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1.5">
+                            <x-icon name="log-out" class="w-4 h-4 rotate-180" />
+                            Login
+                        </button>
+                    @endif
                 </div>
 
                 {{-- Mobile hamburger --}}
@@ -80,10 +108,22 @@
                 </a>
             @endforeach
             <a href="{{ route('contact') }}" @click="navOpen = false" class="btn-accent w-full mt-2 text-sm">Inquire Now</a>
-            <button @click="navOpen = false; loginOpen = true"
-                    class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50">
-                Login
-            </button>
+            @if($loggedInStaff)
+                <a href="{{ route('portal.dashboard') }}" @click="navOpen = false"
+                   class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-primary-600 hover:bg-primary-50">
+                    Admin Panel
+                </a>
+            @elseif($loggedInParent)
+                <a href="{{ route('parent.dashboard') }}" @click="navOpen = false"
+                   class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-primary-600 hover:bg-primary-50">
+                    Parent Portal
+                </a>
+            @else
+                <button @click="navOpen = false; loginOpen = true"
+                        class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50">
+                    Login
+                </button>
+            @endif
         </div>
     </header>
 
@@ -142,7 +182,13 @@
 
             <div class="mt-10 pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
                 <p>© {{ date('Y') }} Roberts Family ChildCare. All rights reserved.</p>
-                <button @click="loginOpen = true" class="hover:text-slate-400 transition-colors">Login</button>
+                @if($loggedInStaff)
+                    <a href="{{ route('portal.dashboard') }}" class="hover:text-slate-400 transition-colors">Admin Panel</a>
+                @elseif($loggedInParent)
+                    <a href="{{ route('parent.dashboard') }}" class="hover:text-slate-400 transition-colors">Parent Portal</a>
+                @else
+                    <button @click="loginOpen = true" class="hover:text-slate-400 transition-colors">Login</button>
+                @endif
             </div>
         </div>
     </footer>
@@ -150,8 +196,8 @@
     {{-- Login modal — sibling of header so backdrop-filter on header can't trap it --}}
     <div x-show="loginOpen" x-cloak
          class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-         @keydown.escape.window="loginOpen = false"
-         @click.self="loginOpen = false">
+         @keydown.escape.window="loginOpen = false; loginError = null"
+         @click.self="loginOpen = false; loginError = null">
 
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" @click.stop
              x-transition:enter="transition ease-out duration-200"
@@ -164,7 +210,7 @@
                     <img src="{{ asset('logo.png') }}" alt="Logo" class="h-9 w-auto">
                     <h2 class="text-lg font-bold text-slate-800">Sign In</h2>
                 </div>
-                <button @click="loginOpen = false"
+                <button @click="loginOpen = false; loginError = null"
                         class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100">
                     <x-icon name="x" class="w-5 h-5" />
                 </button>
@@ -172,14 +218,16 @@
 
             {{-- Body --}}
             <div class="px-6 py-5">
-                @if(session('login_error'))
-                    <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                        {{ session('login_error') }}
-                    </div>
-                @endif
+                <div x-show="loginError" x-cloak
+                     class="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                    <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <span x-text="loginError"></span>
+                </div>
 
                 <form method="POST" action="{{ route('unified.login') }}"
-                      @submit="loading = true; if (!remember) username = ''">
+                      @submit="loading = true; loginError = null; if (!remember) username = ''">
                     @csrf
 
                     <div class="mb-4">
@@ -196,12 +244,21 @@
                                class="input" placeholder="••••••••">
                     </div>
 
-                    <div class="flex items-center gap-2 mb-6">
-                        <input type="checkbox" id="remember-username" x-model="remember"
-                               class="rounded border-slate-300 text-primary-500 focus:ring-primary-400">
-                        <label for="remember-username" class="text-sm text-slate-600 select-none cursor-pointer">
-                            Remember my username
-                        </label>
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="remember-username" x-model="remember"
+                                   class="rounded border-slate-300 text-primary-500 focus:ring-primary-400">
+                            <label for="remember-username" class="text-sm text-slate-600 select-none cursor-pointer">
+                                Remember my username
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="stay-logged-in" name="stay_logged_in" value="1"
+                                   class="rounded border-slate-300 text-primary-500 focus:ring-primary-400">
+                            <label for="stay-logged-in" class="text-sm text-slate-600 select-none cursor-pointer">
+                                Stay logged in for a week
+                            </label>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn-primary w-full" :disabled="loading">

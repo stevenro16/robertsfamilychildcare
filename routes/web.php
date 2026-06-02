@@ -52,6 +52,7 @@ Route::middleware(['auth', 'password.change'])->prefix('portal')->name('portal.'
     require __DIR__.'/portal/testimonials.php';
     require __DIR__.'/portal/parent-portals.php';
     require __DIR__.'/portal/settings.php';
+    require __DIR__.'/portal/littlelog.php';
 });
 
 // ── Parent auth ───────────────────────────────────────────────────────────────

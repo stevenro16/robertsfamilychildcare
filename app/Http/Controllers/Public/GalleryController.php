@@ -9,7 +9,8 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        $images = GalleryImage::orderBy('sortOrder')->get(['id', 'filename', 'caption', 'sortOrder']);
+        $images = GalleryImage::orderByRaw('takenAt IS NULL, takenAt ASC, sortOrder ASC')
+                              ->get(['id', 'filename', 'caption', 'takenAt', 'sortOrder']);
         return view('public.gallery', compact('images'));
     }
 

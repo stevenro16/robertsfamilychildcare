@@ -18,8 +18,11 @@ class StaffMember extends Model
     protected function casts(): array
     {
         return [
-            'sortOrder' => 'integer',
-            'createdAt' => 'datetime',
+            'sortOrder'       => 'integer',
+            'yearsExperience' => 'integer',
+            'startDate'       => 'date',
+            'isActive'        => 'boolean',
+            'createdAt'       => 'datetime',
         ];
     }
 

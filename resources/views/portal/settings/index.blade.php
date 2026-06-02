@@ -2,8 +2,12 @@
 @section('title', 'Settings')
 
 @section('portal-content')
-<div class="max-w-4xl" x-data="{ sqlResult: null }">
-    <h1 class="text-2xl font-bold text-slate-800 mb-6">Settings</h1>
+<div class="w-full" x-data="{ sqlResult: null }">
+    <h1 class="text-2xl font-bold text-slate-800 mb-2 flex items-center gap-2.5">
+        <x-icon name="shield" class="w-6 h-6 text-primary-500" />
+        Settings
+    </h1>
+    <div class="h-0.5 bg-linear-to-r from-primary-400 to-transparent rounded-full mb-6"></div>
 
     @if(session('success'))
         <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
@@ -15,25 +19,6 @@
             {{ session('error') }}
         </div>
     @endif
-
-    {{-- Site Content --}}
-    <div class="card p-6 mb-6">
-        <h2 class="font-semibold text-slate-700 mb-4">Site Content</h2>
-        <form method="POST" action="{{ route('portal.settings.update') }}">
-            @csrf @method('PATCH')
-            @foreach($content as $key => $value)
-                <div class="mb-4">
-                    <label class="label">{{ str_replace('_', ' ', ucfirst($key)) }}</label>
-                    @if(strlen($value ?? '') > 100 || str_contains($key, 'body'))
-                        <textarea name="{{ $key }}" rows="4" class="input text-sm resize-none">{{ $value }}</textarea>
-                    @else
-                        <input type="text" name="{{ $key }}" value="{{ $value }}" class="input text-sm">
-                    @endif
-                </div>
-            @endforeach
-            <button type="submit" class="btn-primary">Save Settings</button>
-        </form>
-    </div>
 
     {{-- Accounts link --}}
     <div class="card p-6 mb-6">

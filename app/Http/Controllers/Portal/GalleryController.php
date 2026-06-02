@@ -11,7 +11,7 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        $images = GalleryImage::orderBy('sortOrder')->get();
+        $images = GalleryImage::orderByRaw('takenAt IS NULL, takenAt DESC, sortOrder ASC')->get();
         return view('portal.gallery.index', compact('images'));
     }
 
@@ -20,16 +20,17 @@ class GalleryController extends Controller
         $request->validate([
             'image'   => 'required|image|max:10240',
             'caption' => 'nullable|string|max:500',
+            'takenAt' => 'nullable|date',
         ]);
 
-        $file = $request->file('image');
-        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+        $file    = $request->file('image');
+        $ext     = $file->getClientOriginalExtension() ?: 'jpg';
         $maxSort = GalleryImage::max('sortOrder') ?? 0;
 
-        // Create record first so HasUuidKey generates the ID
         $image = GalleryImage::create([
             'filename'  => '',
             'caption'   => $request->input('caption'),
+            'takenAt'   => $request->input('takenAt') ?: null,
             'sortOrder' => $maxSort + 1,
         ]);
 
@@ -44,6 +45,7 @@ class GalleryController extends Controller
         $image = GalleryImage::findOrFail($id);
         $data = $request->validate([
             'caption'   => 'nullable|string|max:500',
+            'takenAt'   => 'nullable|date',
             'sortOrder' => 'sometimes|integer',
         ]);
         $image->update($data);

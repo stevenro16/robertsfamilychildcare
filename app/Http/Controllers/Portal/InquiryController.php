@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Child;
 use App\Models\Inquiry;
 use App\Models\InquiryNote;
 use App\Models\InquiryStatusHistory;
@@ -18,7 +19,7 @@ class InquiryController extends Controller
 
     public function index()
     {
-        $inquiries = Inquiry::whereNotIn('status', ['COMPLETE', 'FOLLOW_UP_WHEN_ROOM'])
+        $inquiries = Inquiry::where('status', 'NEW')
             ->where(function ($q) {
                 $q->where('isSnoozed', false)
                   ->orWhereNull('snoozeUntil')
@@ -29,7 +30,41 @@ class InquiryController extends Controller
 
         return view('portal.inquiries.index', [
             'inquiries' => $inquiries,
-            'queue'     => 'active',
+            'queue'     => 'needs_attention',
+            'counts'    => $this->bucketCounts(),
+        ]);
+    }
+
+    private const AWAITING_STATUSES = [
+        'LEFT_VOICEMAIL', 'LEFT_VOICEMAIL_2', 'LEFT_VOICEMAIL_FINAL', 'PROVIDED_PRICING_WAITING',
+    ];
+
+    public function awaiting()
+    {
+        $inquiries = Inquiry::whereIn('status', self::AWAITING_STATUSES)
+            ->where(function ($q) {
+                $q->where('isSnoozed', false)
+                  ->orWhereNull('snoozeUntil')
+                  ->orWhere('snoozeUntil', '<=', now());
+            })
+            ->orderBy('updatedAt', 'asc')
+            ->get();
+
+        return view('portal.inquiries.index', [
+            'inquiries' => $inquiries,
+            'queue'     => 'awaiting',
+            'counts'    => $this->bucketCounts(),
+        ]);
+    }
+
+    public function all()
+    {
+        $inquiries = Inquiry::orderBy('createdAt', 'desc')->get();
+
+        return view('portal.inquiries.index', [
+            'inquiries' => $inquiries,
+            'queue'     => 'all',
+            'counts'    => $this->bucketCounts(),
         ]);
     }
 
@@ -43,6 +78,7 @@ class InquiryController extends Controller
         return view('portal.inquiries.index', [
             'inquiries' => $inquiries,
             'queue'     => 'snoozed',
+            'counts'    => $this->bucketCounts(),
         ]);
     }
 
@@ -55,6 +91,7 @@ class InquiryController extends Controller
         return view('portal.inquiries.index', [
             'inquiries' => $inquiries,
             'queue'     => 'room',
+            'counts'    => $this->bucketCounts(),
         ]);
     }
 
@@ -68,7 +105,25 @@ class InquiryController extends Controller
         return view('portal.inquiries.index', [
             'inquiries' => $inquiries,
             'queue'     => 'completed',
+            'counts'    => $this->bucketCounts(),
         ]);
+    }
+
+    private function bucketCounts(): array
+    {
+        $notSnoozed = function ($q) {
+            $q->where('isSnoozed', false)
+              ->orWhereNull('snoozeUntil')
+              ->orWhere('snoozeUntil', '<=', now());
+        };
+
+        return [
+            'needs_attention' => Inquiry::where('status', 'NEW')->where($notSnoozed)->count(),
+            'awaiting'        => Inquiry::whereIn('status', self::AWAITING_STATUSES)->where($notSnoozed)->count(),
+            'room'            => Inquiry::where('status', 'FOLLOW_UP_WHEN_ROOM')->count(),
+            'snoozed'         => Inquiry::where('isSnoozed', true)->where('snoozeUntil', '>', now())->count(),
+            'all'             => Inquiry::count(),
+        ];
     }
 
     public function show(string $id)
@@ -86,12 +141,16 @@ class InquiryController extends Controller
         $inquiry = Inquiry::findOrFail($id);
 
         $data = $request->validate([
-            'status'   => 'sometimes|string',
-            'name'     => 'sometimes|string|max:255',
-            'email'    => 'sometimes|email|max:255',
-            'phone'    => 'sometimes|string|max:50',
-            'message'  => 'sometimes|string',
-            'childDob' => 'sometimes|nullable|date',
+            'status'          => 'sometimes|string',
+            'parentName'      => 'sometimes|string|max:255',
+            'parentEmail'     => 'sometimes|nullable|email|max:255',
+            'parentPhone'     => 'sometimes|nullable|string|max:50',
+            'childName'       => 'sometimes|nullable|string|max:255',
+            'childDob'        => 'sometimes|nullable|date',
+            'desiredStart'    => 'sometimes|nullable|date',
+            'hearAbout'       => 'sometimes|nullable|string|max:255',
+            'programInterest' => 'sometimes|nullable|string|max:255',
+            'message'         => 'sometimes|nullable|string',
         ]);
 
         $oldStatus = $inquiry->status;
@@ -101,7 +160,8 @@ class InquiryController extends Controller
         if (isset($data['status']) && $data['status'] !== $oldStatus) {
             InquiryStatusHistory::create([
                 'inquiryId'  => $inquiry->id,
-                'status'     => $data['status'],
+                'oldStatus'  => $oldStatus,
+                'newStatus'  => $data['status'],
                 'employeeId' => Auth::id(),
             ]);
         }
@@ -125,6 +185,48 @@ class InquiryController extends Controller
 
         return redirect()->route('portal.inquiries.show', $id)
             ->with('success', 'Inquiry snoozed until ' . $data['snoozeUntil'] . '.');
+    }
+
+    public function convert(Request $request, string $id)
+    {
+        $inquiry = Inquiry::findOrFail($id);
+
+        $autoComplete = $request->boolean('autoComplete', true);
+
+        $nameParts = explode(' ', trim($inquiry->childName ?? ''), 2);
+        $firstName = $nameParts[0] ?: 'Unknown';
+        $lastName  = $nameParts[1] ?? '';
+
+        $child = Child::create([
+            'firstName'   => $firstName,
+            'lastName'    => $lastName,
+            'dateOfBirth' => $inquiry->childDob,
+            'inquiryId'   => $inquiry->id,
+            'status'      => 'ACTIVE',
+        ]);
+
+        $noteLines = ["Converted from inquiry — child record created (#{$child->id})."];
+
+        if ($autoComplete) {
+            $oldStatus = $inquiry->status;
+            $inquiry->update(['status' => 'COMPLETE']);
+            InquiryStatusHistory::create([
+                'inquiryId'  => $inquiry->id,
+                'oldStatus'  => $oldStatus,
+                'newStatus'  => 'COMPLETE',
+                'employeeId' => Auth::id(),
+            ]);
+            $noteLines[] = 'Inquiry automatically marked Complete upon conversion.';
+        }
+
+        InquiryNote::create([
+            'inquiryId'  => $inquiry->id,
+            'content'    => implode(' ', $noteLines),
+            'employeeId' => Auth::id(),
+        ]);
+
+        return redirect()->route('portal.children.show', $child->id)
+            ->with('success', 'Child record created from inquiry.');
     }
 
     public function notes(string $id)

@@ -17,7 +17,7 @@ class ChildController extends Controller
 {
     public function index()
     {
-        $children = Child::orderBy('lastName')->orderBy('firstName')->get();
+        $children = Child::with(['contacts', 'documents'])->orderBy('lastName')->orderBy('firstName')->get();
         return view('portal.children.index', compact('children'));
     }
 
@@ -40,27 +40,62 @@ class ChildController extends Controller
             'inquiryId'  => 'nullable|string',
         ]);
 
-        $child = Child::create($data);
+        $child = Child::create([
+            'firstName'   => $data['firstName'],
+            'lastName'    => $data['lastName'],
+            'dateOfBirth' => $data['dob'],
+            'inquiryId'   => $data['inquiryId'] ?? null,
+        ]);
         return redirect()->route('portal.children.show', $child->id);
     }
 
     public function show(string $id)
     {
-        $child = Child::with(['notes.employee', 'contacts', 'documents'])->findOrFail($id);
-        $tab = request('tab', 'overview');
-        return view('portal.children.show', compact('child', 'tab'));
+        $child = Child::with(['contacts', 'documents'])->findOrFail($id);
+        $notes = ChildNote::with('employee')->where('childId', $id)->orderByDesc('createdAt')->get();
+        $tab = request('tab', 'stats');
+        return view('portal.children.show', compact('child', 'tab', 'notes'));
     }
 
     public function update(Request $request, string $id)
     {
         $child = Child::findOrFail($id);
+
         $data = $request->validate([
-            'firstName'   => 'sometimes|string|max:100',
-            'lastName'    => 'sometimes|string|max:100',
-            'dob'         => 'sometimes|date',
-            'schedule'    => 'sometimes|array',
-            'checkedInAt' => 'sometimes|nullable|date',
+            'firstName'     => 'sometimes|string|max:100',
+            'lastName'      => 'sometimes|string|max:100',
+            'dob'           => 'sometimes|nullable|date',
+            'expectedStart' => 'sometimes|nullable|date',
+            'status'        => 'sometimes|string|max:50',
+            'notes'         => 'sometimes|nullable|string',
         ]);
+
+        if (array_key_exists('dob', $data)) {
+            $data['dateOfBirth'] = $data['dob'];
+            unset($data['dob']);
+        }
+
+        // Build schedule from per-day active flags + time inputs
+        if ($request->has('schedule_active') || $request->has('schedule')) {
+            $activeFlags  = $request->input('schedule_active', []);
+            $timeInputs   = $request->input('schedule', []);
+            $schedule     = [];
+
+            foreach (['monday','tuesday','wednesday','thursday','friday'] as $day) {
+                $isActive = !empty($activeFlags[$day]);
+                $dropoff  = trim($timeInputs[$day]['dropoff'] ?? '');
+                $pickup   = trim($timeInputs[$day]['pickup']  ?? '');
+
+                if ($isActive || $dropoff || $pickup) {
+                    $entry = array_filter(['dropoff' => $dropoff ?: null, 'pickup' => $pickup ?: null]);
+                    $schedule[$day] = empty($entry) ? 'scheduled' : $entry;
+                } else {
+                    $schedule[$day] = null;
+                }
+            }
+
+            $data['schedule'] = $schedule;
+        }
 
         $child->update($data);
         return redirect()->route('portal.children.show', $id)->with('success', 'Child updated.');
@@ -68,8 +103,8 @@ class ChildController extends Controller
 
     public function notes(string $id)
     {
-        $child = Child::with('notes.employee')->findOrFail($id);
-        return response()->json($child->notes);
+        Child::findOrFail($id);
+        return response()->json(ChildNote::with('employee')->where('childId', $id)->get());
     }
 
     public function addNote(Request $request, string $id)
@@ -126,9 +161,18 @@ class ChildController extends Controller
         $data = $request->validate([
             'relationship' => 'sometimes|string|max:100',
             'isPrimary'    => 'sometimes|boolean',
+            'name'         => 'sometimes|string|max:200',
+            'phone'        => 'sometimes|nullable|string|max:30',
+            'email'        => 'sometimes|nullable|email|max:200',
         ]);
-        $cc->update($data);
-        return back()->with('success', 'Contact updated.');
+
+        $pivotData   = array_intersect_key($data, array_flip(['relationship', 'isPrimary']));
+        $contactData = array_intersect_key($data, array_flip(['name', 'phone', 'email']));
+
+        if (!empty($pivotData))   $cc->update($pivotData);
+        if (!empty($contactData)) $cc->contact->update($contactData);
+
+        return redirect()->route('portal.children.show', $id)->with('success', 'Contact updated.');
     }
 
     public function documents(string $id)
@@ -175,8 +219,26 @@ class ChildController extends Controller
 
         $file = $request->file('photo');
         $path = $file->storeAs('uploads/children', $child->id . '.jpg', 'public');
+        $url  = '/storage/' . $path;
 
-        $child->update(['photoUrl' => '/storage/' . $path]);
+        $child->update(['photoUrl' => $url]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true, 'photoUrl' => $url]);
+        }
         return back()->with('success', 'Photo updated.');
+    }
+
+    public function clearPhoto(string $id)
+    {
+        $child = Child::findOrFail($id);
+
+        if ($child->photoUrl) {
+            $relativePath = str_replace('/storage/', '', $child->photoUrl);
+            Storage::disk('public')->delete($relativePath);
+            $child->update(['photoUrl' => null]);
+        }
+
+        return back()->with('success', 'Photo removed.');
     }
 }

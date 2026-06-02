@@ -24,12 +24,12 @@
             <p style="margin-top: 0;">A new inquiry has been submitted on Roberts Family ChildCare.</p>
 
             <table>
-                <tr><td>Name</td><td>{{ $inquiry->name }}</td></tr>
-                @if($inquiry->email)
-                <tr><td>Email</td><td><a href="mailto:{{ $inquiry->email }}">{{ $inquiry->email }}</a></td></tr>
+                <tr><td>Name</td><td>{{ $inquiry->parentName }}</td></tr>
+                @if($inquiry->parentEmail)
+                <tr><td>Email</td><td><a href="mailto:{{ $inquiry->parentEmail }}">{{ $inquiry->parentEmail }}</a></td></tr>
                 @endif
-                @if($inquiry->phone)
-                <tr><td>Phone</td><td>{{ $inquiry->phone }}</td></tr>
+                @if($inquiry->parentPhone)
+                <tr><td>Phone</td><td>{{ $inquiry->parentPhone }}</td></tr>
                 @endif
                 @if($inquiry->childDob)
                 <tr><td>Child DOB</td><td>{{ \Carbon\Carbon::parse($inquiry->childDob)->format('M j, Y') }}</td></tr>
