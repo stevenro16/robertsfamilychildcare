@@ -11,7 +11,7 @@
         </div>
 
         <div class="card p-6">
-            <form method="POST" action="{{ route('staff.login') }}" x-data="{ loading: false }" @submit="loading = true">
+            <form method="POST" action="{{ route('unified.login') }}" x-data="{ loading: false }" @submit="loading = true">
                 @csrf
 
                 @if ($errors->any())
