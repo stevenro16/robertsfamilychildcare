@@ -19,14 +19,14 @@ There are no automated tests.
 
 ## Deployment (GoDaddy cPanel PHP Hosting)
 
-1. Upload project via FTP — exclude `node_modules`, `.env`, `storage/logs/`
-2. In cPanel → Domains: set document root to `public/` inside the uploaded folder
-3. SSH/Terminal: `composer install --no-dev --optimize-autoloader`
-4. Create `.env` from `.env.example`; set all DB credentials + `APP_KEY`
-5. `php artisan key:generate`
-6. `php artisan storage:link` (creates `public/storage` → `storage/app/public` symlink)
-7. `php artisan config:cache && php artisan route:cache && php artisan view:cache`
-8. Ensure `storage/` and `bootstrap/cache/` are writable
+See **[DEPLOY.md](DEPLOY.md)** for the full deployment guide, including the non-standard server architecture, asset upload workflow, and troubleshooting reference.
+
+**Key facts:**
+- Document root is locked to `public_html/` — cannot be changed
+- Laravel app lives at `~/rfc/`, bootstrapped via a custom `public_html/index.php`
+- Vite build assets must be uploaded to **two** locations (see DEPLOY.md)
+- Symlinks do not work on this host — do not use `ln -s` for assets
+- `TRUSTED_PROXIES` is set in `bootstrap/app.php`, not `.env`
 
 ## Architecture
 
