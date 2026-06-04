@@ -34,8 +34,8 @@ Route::post('/testimonial/{token}', [TestimonialSubmitController::class, 'store'
 Route::post('/login',  [UnifiedLoginController::class, 'login'])->name('unified.login');
 Route::post('/logout', [StaffAuthController::class, 'logout'])->name('staff.logout');
 
-// ── Staff auth (kept for direct access / password change redirect) ────────────
-Route::get('/login',   [StaffAuthController::class, 'showLogin'])->name('login');
+// ── Login redirect — sends unauthenticated users to home page modal ───────────
+Route::get('/login', fn() => redirect()->route('home'))->name('login');
 
 // ── Staff portal ──────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'password.change'])->prefix('portal')->name('portal.')->group(function () {
