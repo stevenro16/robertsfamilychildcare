@@ -32,9 +32,11 @@ Route::post('/testimonial/{token}', [TestimonialSubmitController::class, 'store'
 
 // ── Storage file passthrough (GoDaddy can't symlink; serve via Laravel) ───────
 Route::get('/storage/{path}', function (string $path) {
-    foreach ([storage_path('app/public'), public_path('../public_html/storage/app/public')] as $base) {
-        $file = realpath($base . '/' . $path);
-        if ($file && str_starts_with($file, realpath($base)) && is_file($file)) {
+    foreach ([storage_path('app/public'), '/home/eyuabkafn4mp/public_html/storage/app/public'] as $base) {
+        $resolved = realpath($base);
+        if (!$resolved) continue;
+        $file = realpath($resolved . '/' . $path);
+        if ($file && str_starts_with($file, $resolved) && is_file($file)) {
             return response()->file($file);
         }
     }
