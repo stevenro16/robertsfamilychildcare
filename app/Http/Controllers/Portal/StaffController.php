@@ -59,6 +59,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name'            => 'sometimes|string|max:100',
             'title'           => 'sometimes|string|max:100',
+            'email'           => 'sometimes|nullable|email|max:255',
             'bio'             => 'sometimes|nullable|string',
             'sortOrder'       => 'sometimes|integer',
             'startDate'       => 'sometimes|nullable|date',

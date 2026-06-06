@@ -105,53 +105,86 @@
                         @endif
                     </div>
 
-                    {{-- Name + title --}}
+                    {{-- Name + title + email action --}}
                     <div>
                         <p class="font-semibold text-slate-800 text-lg leading-tight">{{ $member->name }}</p>
                         <p class="text-sm text-slate-500 mt-0.5">{{ $member->title }}</p>
-                        <p class="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
-                            <x-icon name="pencil" class="w-3 h-3" />
-                            Click photo to change
-                        </p>
+                        @if($member->email)
+                            <a href="mailto:{{ $member->email }}"
+                               class="mt-1.5 inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 font-medium">
+                                <x-icon name="envelope" class="w-3.5 h-3.5" />
+                                {{ $member->email }}
+                            </a>
+                        @else
+                            <p class="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                                <x-icon name="pencil" class="w-3 h-3" />
+                                Click photo to change
+                            </p>
+                        @endif
                     </div>
                 </div>
 
                 {{-- Profile form --}}
                 <h2 class="font-semibold text-slate-700 mb-4">Profile</h2>
+
+                @if($errors->any())
+                    <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                        <ul class="list-disc list-inside space-y-0.5">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('portal.staff.update', $member->id) }}">
                     @csrf @method('PATCH')
                     <div class="mb-3">
                         <label class="label">Name</label>
-                        <input type="text" name="name" value="{{ $member->name }}" class="input text-sm">
+                        <input type="text" name="name" value="{{ old('name', $member->name) }}" class="input text-sm" required>
                     </div>
                     <div class="mb-3">
                         <label class="label">Title</label>
-                        <input type="text" name="title" value="{{ $member->title }}" class="input text-sm">
+                        <input type="text" name="title" value="{{ old('title', $member->title) }}" class="input text-sm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="label">Email</label>
+                        <div class="flex gap-2">
+                            <input type="email" name="email" value="{{ old('email', $member->email) }}"
+                                   class="input text-sm flex-1" placeholder="staff@example.com">
+                            @if($member->email)
+                                <a href="mailto:{{ $member->email }}"
+                                   class="btn-ghost text-sm flex items-center gap-1.5 shrink-0">
+                                    <x-icon name="envelope" class="w-4 h-4" />
+                                    Send Email
+                                </a>
+                            @endif
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3 mb-3">
                         <div>
                             <label class="label">Start Date at Daycare</label>
                             <input type="date" name="startDate"
-                                   value="{{ $member->startDate ? $member->startDate->format('Y-m-d') : '' }}"
+                                   value="{{ old('startDate', $member->startDate?->format('Y-m-d') ?? '') }}"
                                    class="input text-sm">
                         </div>
                         <div>
                             <label class="label">Years of Experience</label>
                             <input type="number" name="yearsExperience" min="0" max="99"
-                                   value="{{ $member->yearsExperience }}"
+                                   value="{{ old('yearsExperience', $member->yearsExperience) }}"
                                    class="input text-sm" placeholder="e.g. 8">
                         </div>
                     </div>
                     <div class="mb-4">
                         <label class="label">Bio</label>
-                        <textarea name="bio" rows="4" class="input text-sm resize-none">{{ $member->bio }}</textarea>
+                        <textarea name="bio" rows="4" class="input text-sm resize-none">{{ old('bio', $member->bio) }}</textarea>
                     </div>
-                    <div x-data="{ isActive: {{ $member->isActive ? 'true' : 'false' }} }" class="mb-4">
+                    <div x-data="{ isActive: {{ old('isActive', $member->isActive) ? 'true' : 'false' }} }" class="mb-4">
                         <div class="flex items-center gap-2 mb-2">
                             <input type="hidden" name="isActive" value="0">
                             <input type="checkbox" name="isActive" value="1" id="isActive"
                                    x-model="isActive"
-                                   {{ $member->isActive ? 'checked' : '' }}
+                                   {{ old('isActive', $member->isActive) ? 'checked' : '' }}
                                    class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
                             <label for="isActive" class="text-sm font-medium text-slate-700">Active staff member</label>
                         </div>
@@ -167,7 +200,7 @@
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary text-sm">Save</button>
+                    <button type="submit" class="btn-primary text-sm">Save Changes</button>
                 </form>
             </div>
 
