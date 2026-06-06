@@ -30,19 +30,6 @@ Route::post('/contact',        [ContactController::class, 'store'])->name('conta
 Route::get('/testimonial/{token}',  [TestimonialSubmitController::class, 'show'])->name('testimonial.show');
 Route::post('/testimonial/{token}', [TestimonialSubmitController::class, 'store'])->name('testimonial.store');
 
-// ── Storage file passthrough (GoDaddy can't symlink; serve via Laravel) ───────
-Route::get('/storage/{path}', function (string $path) {
-    foreach ([storage_path('app/public'), '/home/eyuabkafn4mp/public_html/storage/app/public'] as $base) {
-        $resolved = realpath($base);
-        if (!$resolved) continue;
-        $file = realpath($resolved . '/' . $path);
-        if ($file && str_starts_with($file, $resolved) && is_file($file)) {
-            return response()->file($file);
-        }
-    }
-    abort(404);
-})->where('path', '.+');
-
 // ── Unified login ─────────────────────────────────────────────────────────────
 Route::post('/login',  [UnifiedLoginController::class, 'login'])->name('unified.login');
 Route::post('/logout', [StaffAuthController::class, 'logout'])->name('staff.logout');
