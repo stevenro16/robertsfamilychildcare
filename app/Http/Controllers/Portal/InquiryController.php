@@ -256,7 +256,7 @@ class InquiryController extends Controller
     public function sendNotification(string $id)
     {
         $inquiry = Inquiry::findOrFail($id);
-        $notificationEmail = env('NOTIFICATION_EMAIL');
+        $notificationEmail = config('mail.notification_email');
 
         if (! $notificationEmail) {
             return back()->with('error', 'NOTIFICATION_EMAIL is not set in .env.');

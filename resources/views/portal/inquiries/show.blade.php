@@ -468,7 +468,7 @@ $isWhenRoom    = $inquiry->status === 'FOLLOW_UP_WHEN_ROOM';
                 <div class="px-5 py-4 space-y-3">
                     <p class="text-xs text-slate-500 leading-relaxed">
                         Sends the full inquiry details to
-                        <span class="font-medium text-slate-700">{{ env('NOTIFICATION_EMAIL', 'not configured') }}</span>.
+                        <span class="font-medium text-slate-700">{{ config('mail.notification_email') ?? 'not configured' }}</span>.
                     </p>
                     <form method="POST" action="{{ route('portal.inquiries.notify', $inquiry->id) }}">
                         @csrf

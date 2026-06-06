@@ -46,7 +46,7 @@ class ContactController extends Controller
             'updatedAt'       => now(),
         ]);
 
-        $notificationEmail = config('mail.notification_email', env('NOTIFICATION_EMAIL'));
+        $notificationEmail = config('mail.notification_email');
         if ($notificationEmail) {
             try {
                 Mail::to($notificationEmail)->send(new NewInquiryMail($inquiry));
