@@ -13,4 +13,5 @@ Route::patch('/inquiries/{id}',        [InquiryController::class, 'update'])->na
 Route::post('/inquiries/{id}/snooze',  [InquiryController::class, 'snooze'])->name('inquiries.snooze');
 Route::get('/inquiries/{id}/notes',    [InquiryController::class, 'notes'])->name('inquiries.notes');
 Route::post('/inquiries/{id}/notes',   [InquiryController::class, 'addNote'])->name('inquiries.notes.add');
-Route::post('/inquiries/{id}/convert', [InquiryController::class, 'convert'])->name('inquiries.convert');
+Route::post('/inquiries/{id}/convert',  [InquiryController::class, 'convert'])->name('inquiries.convert');
+Route::post('/inquiries/{id}/notify',   [InquiryController::class, 'sendNotification'])->name('inquiries.notify');

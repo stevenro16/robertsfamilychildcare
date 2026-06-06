@@ -304,23 +304,34 @@ $isWhenRoom    = $inquiry->status === 'FOLLOW_UP_WHEN_ROOM';
                 </form>
             </div>
 
-            {{-- Status history --}}
+            {{-- Audit trail --}}
             @if($inquiry->statusHistory->isNotEmpty())
             <div class="card p-6">
-                <h2 class="font-semibold text-slate-700 mb-4">Status History</h2>
+                <h2 class="font-semibold text-slate-700 mb-4">Audit Trail</h2>
                 <div class="space-y-2">
                     @foreach($inquiry->statusHistory as $entry)
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-slate-400 text-xs w-36 shrink-0">{{ $entry->createdAt->format('M j, Y g:i A') }}</span>
-                            @if($entry->oldStatus)
-                                <span class="text-slate-400 text-xs">{{ str_replace('_', ' ', $entry->oldStatus) }}</span>
-                                <x-icon name="arrow-right" class="w-3 h-3 text-slate-300 shrink-0" />
-                            @endif
-                            <span class="font-medium text-slate-600">{{ str_replace('_', ' ', $entry->newStatus) }}</span>
-                            @if($entry->employee)
-                                <span class="text-slate-400 text-xs">by {{ $entry->employee->name }}</span>
-                            @endif
-                        </div>
+                        @if($entry->newStatus === 'NOTIFICATION_SENT')
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="text-slate-400 text-xs w-36 shrink-0">{{ $entry->createdAt->format('M j, Y g:i A') }}</span>
+                                <x-icon name="envelope" class="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                                <span class="font-medium text-sky-600">Notification email sent</span>
+                                <span class="text-slate-400 text-xs">
+                                    by {{ $entry->employee?->name ?? 'system' }}
+                                </span>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="text-slate-400 text-xs w-36 shrink-0">{{ $entry->createdAt->format('M j, Y g:i A') }}</span>
+                                @if($entry->oldStatus)
+                                    <span class="text-slate-400 text-xs">{{ str_replace('_', ' ', $entry->oldStatus) }}</span>
+                                    <x-icon name="arrow-right" class="w-3 h-3 text-slate-300 shrink-0" />
+                                @endif
+                                <span class="font-medium text-slate-600">{{ str_replace('_', ' ', $entry->newStatus) }}</span>
+                                @if($entry->employee)
+                                    <span class="text-slate-400 text-xs">by {{ $entry->employee->name }}</span>
+                                @endif
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -446,6 +457,27 @@ $isWhenRoom    = $inquiry->status === 'FOLLOW_UP_WHEN_ROOM';
                             Follow Up When Room
                         </button>
                     @endif
+                </div>
+            </div>
+
+            {{-- Send notification email --}}
+            <div class="card overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100">
+                    <h3 class="text-sm font-semibold text-slate-700">Notification Email</h3>
+                </div>
+                <div class="px-5 py-4 space-y-3">
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Sends the full inquiry details to
+                        <span class="font-medium text-slate-700">{{ env('NOTIFICATION_EMAIL', 'not configured') }}</span>.
+                    </p>
+                    <form method="POST" action="{{ route('portal.inquiries.notify', $inquiry->id) }}">
+                        @csrf
+                        <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-sky-200 bg-sky-50 text-sky-700 text-sm font-medium hover:bg-sky-100 transition-colors">
+                            <x-icon name="envelope" class="w-4 h-4" />
+                            Send Notification Email
+                        </button>
+                    </form>
                 </div>
             </div>
 

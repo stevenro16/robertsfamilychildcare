@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewInquiryMail;
 use App\Models\Child;
 use App\Models\Inquiry;
 use App\Models\InquiryNote;
 use App\Models\InquiryStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class InquiryController extends Controller
 {
@@ -249,5 +251,26 @@ class InquiryController extends Controller
 
         return redirect()->route('portal.inquiries.show', $id)
             ->with('success', 'Note added.');
+    }
+
+    public function sendNotification(string $id)
+    {
+        $inquiry = Inquiry::findOrFail($id);
+        $notificationEmail = env('NOTIFICATION_EMAIL');
+
+        if (! $notificationEmail) {
+            return back()->with('error', 'NOTIFICATION_EMAIL is not set in .env.');
+        }
+
+        Mail::to($notificationEmail)->send(new NewInquiryMail($inquiry));
+
+        InquiryStatusHistory::create([
+            'inquiryId'  => $inquiry->id,
+            'oldStatus'  => '',
+            'newStatus'  => 'NOTIFICATION_SENT',
+            'employeeId' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Notification email sent to ' . $notificationEmail . '.');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Mail\NewInquiryMail;
 use App\Models\Inquiry;
+use App\Models\InquiryStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -45,10 +46,16 @@ class ContactController extends Controller
             'updatedAt'       => now(),
         ]);
 
-        $notificationEmail = env('NOTIFICATION_EMAIL');
+        $notificationEmail = config('mail.notification_email', env('NOTIFICATION_EMAIL'));
         if ($notificationEmail) {
             try {
                 Mail::to($notificationEmail)->send(new NewInquiryMail($inquiry));
+                InquiryStatusHistory::create([
+                    'inquiryId'  => $inquiry->id,
+                    'oldStatus'  => '',
+                    'newStatus'  => 'NOTIFICATION_SENT',
+                    'employeeId' => '',
+                ]);
             } catch (\Exception) {
                 // silently skip if mail not configured
             }
