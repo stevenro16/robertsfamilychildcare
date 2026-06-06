@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\GalleryImage;
+use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
@@ -21,9 +22,8 @@ class GalleryController extends Controller
             abort(404);
         }
 
-        // filename stored as /storage/uploads/gallery/xxx.jpg — map to storage path
-        $relative = ltrim(str_replace('/storage/', '', $image->filename), '/');
-        $path = storage_path('app/public/' . $relative);
+        $relative = ltrim(preg_replace('#^/[^/]+/#', '', $image->filename), '/');
+        $path = Storage::disk('public')->path($relative);
 
         if (! file_exists($path)) {
             abort(404);

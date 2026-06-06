@@ -35,7 +35,7 @@ class GalleryController extends Controller
         ]);
 
         $path = $file->storeAs('uploads/gallery', $image->id . '.' . $ext, 'public');
-        $image->update(['filename' => '/storage/' . $path]);
+        $image->update(['filename' => parse_url(Storage::disk('public')->url($path), PHP_URL_PATH)]);
 
         return redirect()->route('portal.gallery.index')->with('success', 'Image uploaded.');
     }

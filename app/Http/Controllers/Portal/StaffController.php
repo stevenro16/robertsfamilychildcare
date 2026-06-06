@@ -7,6 +7,7 @@ use App\Models\StaffMember;
 use App\Models\StaffNote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class StaffController extends Controller
 {
@@ -103,7 +104,7 @@ class StaffController extends Controller
         $filename = $member->id . '.' . $file->getClientOriginalExtension();
         $path     = $file->storeAs('uploads/staff', $filename, 'public');
 
-        $member->update(['photoUrl' => '/storage/' . $path]);
+        $member->update(['photoUrl' => parse_url(Storage::disk('public')->url($path), PHP_URL_PATH)]);
         return back()->with('success', 'Photo updated.');
     }
 
@@ -111,9 +112,9 @@ class StaffController extends Controller
     {
         $member = StaffMember::findOrFail($id);
 
-        if ($member->photoUrl && str_starts_with($member->photoUrl, '/storage/')) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete(
-                str_replace('/storage/', '', $member->photoUrl)
+        if ($member->photoUrl && str_starts_with($member->photoUrl, '/')) {
+            Storage::disk('public')->delete(
+                ltrim(preg_replace('#^/[^/]+/#', '', $member->photoUrl), '/')
             );
         }
 

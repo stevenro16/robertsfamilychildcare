@@ -195,7 +195,7 @@ class ChildController extends Controller
         ChildDocument::create([
             'childId'        => $child->id,
             'name'           => $file->getClientOriginalName(),
-            'fileUrl'        => '/storage/' . $path,
+            'fileUrl'        => parse_url(Storage::disk('public')->url($path), PHP_URL_PATH),
             'uploadedByParent' => false,
         ]);
 
@@ -205,7 +205,7 @@ class ChildController extends Controller
     public function deleteDocument(string $id, string $docId)
     {
         $doc = ChildDocument::where('childId', $id)->findOrFail($docId);
-        $relativePath = str_replace('/storage/', '', $doc->fileUrl);
+        $relativePath = ltrim(preg_replace('#^/[^/]+/#', '', $doc->fileUrl), '/');
         Storage::disk('public')->delete($relativePath);
         $doc->delete();
 
@@ -219,7 +219,7 @@ class ChildController extends Controller
 
         $file = $request->file('photo');
         $path = $file->storeAs('uploads/children', $child->id . '.jpg', 'public');
-        $url  = '/storage/' . $path;
+        $url  = parse_url(Storage::disk('public')->url($path), PHP_URL_PATH);
 
         $child->update(['photoUrl' => $url]);
 
@@ -234,7 +234,7 @@ class ChildController extends Controller
         $child = Child::findOrFail($id);
 
         if ($child->photoUrl) {
-            $relativePath = str_replace('/storage/', '', $child->photoUrl);
+            $relativePath = ltrim(preg_replace('#^/[^/]+/#', '', $child->photoUrl), '/');
             Storage::disk('public')->delete($relativePath);
             $child->update(['photoUrl' => null]);
         }

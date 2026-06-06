@@ -9,6 +9,7 @@ use App\Models\ChildDocument;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ParentChildController extends Controller
 {
@@ -88,7 +89,7 @@ class ParentChildController extends Controller
         ChildDocument::create([
             'childId'         => $child->id,
             'name'            => $file->getClientOriginalName(),
-            'fileUrl'         => '/storage/' . $path,
+            'fileUrl'         => parse_url(Storage::disk('public')->url($path), PHP_URL_PATH),
             'uploadedByParent'=> true,
         ]);
 
